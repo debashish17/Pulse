@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pulse_postgres
+    environment:
+      POSTGRES_DB: pulse_db
+      POSTGRES_USER: pulse_user
+      POSTGRES_PASSWORD: pulse_password
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    ports:
+      - "5433:5432"
+    volumes:
+      - pulse_postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulse_user -d pulse_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pulse_postgres_data:
+    name: pulse_postgres_data

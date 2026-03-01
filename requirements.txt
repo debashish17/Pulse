@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+asyncpg
+psycopg2-binary
+httpx
+requests
+apscheduler
+nltk
+anthropic
+google-api-python-client
+python-dotenv
+vaderSentiment
