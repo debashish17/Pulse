@@ -3,11 +3,11 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: pulse_postgres
+    container_name: pulse_postgres_prod
     environment:
       POSTGRES_DB: pulse_db
       POSTGRES_USER: pulse_user
-      POSTGRES_PASSWORD: pulse_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Set via environment variable
       POSTGRES_INITDB_ARGS: "-E UTF8"
     ports:
       - "5433:5432"
@@ -15,7 +15,7 @@ services:
       - pulse_postgres_data:/var/lib/postgresql/data
     networks:
       - pulse_network
-    restart: unless-stopped
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pulse_user -d pulse_db"]
       interval: 10s
@@ -26,42 +26,36 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pulse_app
+    image: pulse:latest
+    container_name: pulse_app_prod
     environment:
       # Database connection
-      DATABASE_URL: postgresql://pulse_user:pulse_password@postgres:5432/pulse_db
+      DATABASE_URL: postgresql://pulse_user:${POSTGRES_PASSWORD}@postgres:5432/pulse_db
       
-      # External Services (set to false for standalone mode)
-      ENABLE_EXTERNAL_SERVICES: "false"
+      # External Services
+      ENABLE_EXTERNAL_SERVICES: ${ENABLE_EXTERNAL_SERVICES:-false}
       
-      # API Keys (load from .env file or set here)
+      # API Keys (must be set via environment variables)
       YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       
-      # Service URLs (only needed if ENABLE_EXTERNAL_SERVICES=true)
+      # Service URLs
       GENESIS_SERVICE_URL: ${GENESIS_SERVICE_URL:-http://genesis:8001}
       ORBIT_SERVICE_URL: ${ORBIT_SERVICE_URL:-http://orbit:8002}
     ports:
       - "8003:8003"
-    volumes:
-      # Mount code for development (comment out for production)
-      - ./:/app
-      # Mount .env file (optional, environment vars can be set above)
-      - ./.env:/app/.env
     networks:
       - pulse_network
     depends_on:
       postgres:
         condition: service_healthy
-    restart: unless-stopped
+    restart: always
     command: >
       sh -c "
-        echo 'Waiting for database to be ready...' &&
-        sleep 5 &&
         echo 'Running database migrations...' &&
         alembic upgrade head &&
         echo 'Starting PULSE application...' &&
-        uvicorn main:app --host 0.0.0.0 --port 8003 --reload
+        uvicorn main:app --host 0.0.0.0 --port 8003 --workers 4
       "
 
 networks:

@@ -1,0 +1,71 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# Documentation
+*.md
+docs/
+
+# Test files
+test_*.py
+*_test.py
+
+# Environment files (should be mounted or passed at runtime)
+.env
+.env.local
+.env.*.local
+
+# Database files (mounted separately)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Alembic (migrations handled separately)
+alembic.ini
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Scripts (not needed in container)
+*.ps1
+*.sh
+setup_pulse.py
+start_pulse.py
+
+# Temporary files
+tmp/
+temp/
+*.tmp
