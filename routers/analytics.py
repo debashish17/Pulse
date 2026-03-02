@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from database import get_db
 from models import Content, Metrics
-from schemas import SummaryResponse, TimeseriesPoint, PlatformPerformance, TopContentItem
+from schemas import SummaryResponse, TimeseriesPoint, PlatformPerformance, TopContentItem, TrendingContentItem
 from typing import List, Optional
 from datetime import datetime, timedelta
+from services.trending_discovery import get_platform_trending, extract_genre_keywords
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -145,12 +146,22 @@ def get_by_platform(db: Session = Depends(get_db)):
 
 
 @router.get("/top-content", response_model=List[TopContentItem])
-def get_top_content(limit: int = 10, db: Session = Depends(get_db)):
+def get_top_content(limit: int = 10, platform: str = None, db: Session = Depends(get_db)):
     """
     Returns top performing content items — for the table.
     Computes trend by comparing recent metrics to older metrics.
+    
+    Args:
+        limit: Number of top items to return
+        platform: Optional filter (e.g., 'youtube', 'reddit') - omit to see all platforms
     """
-    contents = db.query(Content).filter(Content.status == "active").all()
+    query = db.query(Content).filter(Content.status == "active")
+    
+    # Apply platform filter if specified
+    if platform:
+        query = query.filter(Content.platform == platform)
+    
+    contents = query.all()
     results = []
 
     for content in contents:
@@ -192,3 +203,80 @@ def get_top_content(limit: int = 10, db: Session = Depends(get_db)):
 
     results.sort(key=lambda x: x.views, reverse=True)
     return results[:limit]
+
+
+@router.get("/discover-trending", response_model=List[TrendingContentItem])
+def discover_trending_content(
+    content_id: Optional[str] = None,
+    platform: Optional[str] = None,
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    """
+    Discover real trending content from actual platforms (YouTube, Reddit, etc.).
+    
+    This endpoint fetches LIVE trending content from the real platforms, not from your database.
+    Use this for competitive intelligence and benchmarking.
+    
+    Args:
+        content_id: Optional - Use your content as reference to find similar trending content
+        platform: Optional - Specific platform (youtube, reddit). If omitted, uses platform from content_id
+        limit: Number of trending items to return (default: 10)
+    
+    Returns:
+        List of real trending content from the platform with stats
+        
+    Examples:
+        GET /analytics/discover-trending?content_id=xxx  
+            → Finds trending content in same genre as your content
+        
+        GET /analytics/discover-trending?platform=youtube&limit=5  
+            → Top 5 trending YouTube videos overall
+        
+        GET /analytics/discover-trending?content_id=xxx&platform=youtube  
+            → YouTube trending in your content's genre
+    """
+    genre_keywords = None
+    target_platform = platform
+    
+    # If content_id provided, extract genre and platform
+    if content_id:
+        content = db.query(Content).filter(Content.id == content_id).first()
+        if not content:
+            raise HTTPException(status_code=404, detail="Content not found")
+        
+        # Extract genre keywords from content DNA
+        if content.content_dna:
+            genre_keywords = extract_genre_keywords(content.content_dna)
+        
+        # Use content's platform if not explicitly specified
+        if not target_platform:
+            target_platform = content.platform
+    
+    # Validate platform
+    if not target_platform:
+        raise HTTPException(
+            status_code=400,
+            detail="Either content_id or platform must be provided"
+        )
+    
+    # Fetch trending content from the real platform
+    trending_results = get_platform_trending(
+        platform=target_platform,
+        genre_keywords=genre_keywords,
+        limit=limit
+    )
+    
+    if not trending_results:
+        # Return empty list with helpful message via exception
+        if target_platform not in ["youtube", "reddit"]:
+            raise HTTPException(
+                status_code=501,
+                detail=f"Trending discovery not yet implemented for {target_platform}. "
+                       f"Currently supported: youtube, reddit"
+            )
+        else:
+            # API might be down or no results
+            return []
+    
+    return trending_results

@@ -90,3 +90,24 @@ class DNAUpdateRequest(BaseModel):
     final_metrics: Dict[str, Any]
     performance_score: float  # 0-100
     learnings: List[str]
+
+
+# --- Trending Discovery ---
+class TrendingContentItem(BaseModel):
+    content_id: Optional[str] = None  # None for external content
+    title: str
+    platform: str
+    post_id: str
+    post_url: str
+    views: int
+    likes: int
+    comments: int
+    engagement_pct: float
+    published_at: Optional[str] = None
+    is_external: bool = True  # True = from real platform, False = from our DB
+    
+    # Platform-specific fields
+    channel_title: Optional[str] = None  # YouTube
+    thumbnail: Optional[str] = None  # YouTube
+    subreddit: Optional[str] = None  # Reddit
+    author: Optional[str] = None  # Reddit

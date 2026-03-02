@@ -80,4 +80,3 @@ nltk_data/
 # Documentation (exclude all except README.md)
 SECURITY.md
 TESTING_REAL_DATA.md
-USAGE.md
