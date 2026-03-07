@@ -2,7 +2,6 @@ from googleapiclient.discovery import build
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from sqlalchemy.orm import Session
 from models import Content, Metrics
-from services.anomaly import run_anomaly_detection
 import os
 import uuid
 from datetime import datetime
@@ -91,9 +90,6 @@ def ingest_youtube(db: Session):
             )
             db.add(metric)
             db.commit()
-
-            # Run anomaly detection after each ingestion
-            run_anomaly_detection(str(content.id), db)
 
         except Exception as e:
             print(f"YouTube ingestion error for {content.post_id}: {e}")

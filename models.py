@@ -38,14 +38,4 @@ class Metrics(Base):
     recorded_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
-class Alert(Base):
-    __tablename__ = "alerts"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    content_id = Column(UUID(as_uuid=True), ForeignKey("content.id", ondelete="CASCADE"))
-    alert_type = Column(String(50), nullable=False)
-    severity = Column(String(20), nullable=False)
-    message = Column(Text, nullable=False)
-    mitigation_suggestions = Column(JSONB)
-    is_resolved = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    resolved_at = Column(DateTime(timezone=True))
+

@@ -1,16 +1,10 @@
 import os
+import requests
 from typing import List, Dict, Any
 
-# Only initialize Anthropic client if API key is provided
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-if ANTHROPIC_API_KEY and ANTHROPIC_API_KEY != "your_anthropic_key":
-    import anthropic
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    ANTHROPIC_ENABLED = True
-else:
-    client = None
-    ANTHROPIC_ENABLED = False
-    print("⚠️  Anthropic API key not configured - using fallback suggestions")
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
+NVIDIA_API_URL = os.getenv("NVIDIA_API_URL", "https://integrate.api.nvidia.com/v1/chat/completions")
+NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "qwen/qwen3.5-122b-a10b")
 
 
 def get_claude_mitigations(
@@ -24,17 +18,10 @@ def get_claude_mitigations(
     status: str,
 ) -> List[str]:
     """
-    Calls Claude API with content DNA and current performance metrics.
-    Returns 3 specific, actionable mitigation suggestions.
-    Falls back to rule-based suggestions if API key not available.
+    Calls NVIDIA API (Qwen model) with content metrics.
+    Returns 3 specific, actionable suggestions.
+    Falls back to rule-based suggestions if the API call fails.
     """
-    
-    # If Anthropic is not configured, return rule-based suggestions
-    if not ANTHROPIC_ENABLED:
-        return get_fallback_suggestions(
-            platform, status, actual_engagement, predicted_engagement, sentiment_score, views
-        )
-
     dna_str = "\n".join([f"  - {k}: {v}" for k, v in (content_dna or {}).items()])
 
     prompt = f"""You are a social media content performance analyst working in real-time.
@@ -64,25 +51,36 @@ Rules:
 - Return ONLY a numbered list 1. 2. 3. with no extra text"""
 
     try:
-        message = client.messages.create(
-            model="claude-opus-4-6",
-            max_tokens=400,
-            messages=[{"role": "user", "content": prompt}],
+        response = requests.post(
+            NVIDIA_API_URL,
+            headers={
+                "Authorization": f"Bearer {NVIDIA_API_KEY}",
+                "Accept": "application/json",
+            },
+            json={
+                "model": NVIDIA_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 400,
+                "temperature": 0.60,
+                "top_p": 0.95,
+                "stream": False,
+            },
+            timeout=30,
         )
-        response_text = message.content[0].text
+        response.raise_for_status()
+        response_text = response.json()["choices"][0]["message"]["content"]
 
         # Parse numbered list into array
         lines = [line.strip() for line in response_text.strip().split("\n") if line.strip()]
         suggestions = []
         for line in lines:
-            # Remove numbering like "1." "2." "3."
             if line and line[0].isdigit() and len(line) > 2:
                 suggestions.append(line[2:].strip() if line[1] == "." else line)
 
         return suggestions[:3] if suggestions else [response_text]
 
     except Exception as e:
-        print(f"Error calling Anthropic API: {e}")
+        print(f"Error calling NVIDIA API: {e}")
         return get_fallback_suggestions(
             platform, status, actual_engagement, predicted_engagement, sentiment_score, views
         )

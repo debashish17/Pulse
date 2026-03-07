@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 from models import Base
-from routers import analytics, alerts, content, mitigations, ingestion
+from routers import analytics, mitigations
+from routers import analyze as analyze_router
 from scheduler import start_scheduler
 import uvicorn
 
@@ -11,12 +12,15 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="PULSE — Real-Time Analytics & Content Intelligence",
-    description="Standalone microservice for monitoring content performance across social platforms. "
-                "Other services call PULSE via REST API to register content, retrieve analytics, and get AI-powered suggestions.",
-    version="1.0.0",
+    description=(
+        "Drop a YouTube or Reddit URL and get instant performance analysis, "
+        "sentiment, and AI-powered improvement suggestions. "
+        "Endpoints: POST /analyze · POST /suggestions · GET /analytics/*"
+    ),
+    version="2.0.0",
 )
 
-# Allow calls from other services (Genesis, Orbit, etc.)
+# Allow calls from other services and frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,12 +28,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register all routers
-app.include_router(content.router)
-app.include_router(analytics.router)
-app.include_router(alerts.router)
-app.include_router(mitigations.router)
-app.include_router(ingestion.router)
+# Core endpoints
+app.include_router(analyze_router.router)   # POST /analyze, GET /analyze/{id}/history
+app.include_router(mitigations.router)      # POST /suggestions
+app.include_router(analytics.router)        # GET /analytics/summary|timeseries|by-platform|discover-trending
 
 
 # Health check

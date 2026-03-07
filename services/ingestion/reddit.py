@@ -2,7 +2,6 @@ import requests
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from sqlalchemy.orm import Session
 from models import Content, Metrics
-from services.anomaly import run_anomaly_detection
 import os
 import uuid
 from datetime import datetime
@@ -139,8 +138,6 @@ def ingest_reddit(db: Session):
             db.add(metric)
             db.commit()
 
-            run_anomaly_detection(str(content.id), db)
-            
             print(f"✓ Reddit ingestion successful for {post_id}: {views} views, {sentiment_label} sentiment")
 
         except Exception as e:

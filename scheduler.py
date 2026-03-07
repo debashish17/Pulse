@@ -2,17 +2,14 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from database import SessionLocal
 from services.ingestion.youtube import ingest_youtube
 from services.ingestion.reddit import ingest_reddit
-from services.ingestion.mock_platforms import ingest_mock
 
 
 def run_ingestion():
-    """Runs all platform ingestion jobs."""
+    """Polls YouTube and Reddit every 10 minutes for registered content."""
     db = SessionLocal()
     try:
         ingest_youtube(db)
         ingest_reddit(db)
-        for platform in ["twitter", "instagram", "linkedin", "tiktok"]:
-            ingest_mock(db, platform)
     finally:
         db.close()
 
