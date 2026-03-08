@@ -1,295 +1,305 @@
-# PULSE — Real-Time Content Analytics & Intelligence
+<div align="center">
 
-> **Standalone Microservice for Content Performance Monitoring**  
-> Other services call PULSE via REST API to monitor content performance and get AI-powered insights
+# ⚡ PULSE
 
----
+### Real-Time Content Analytics & Intelligence
 
-## 🌐 Standalone Service Architecture
+**Drop a URL. Get the full picture.**
 
-**PULSE is a standalone microservice** that:
-- Accepts content registration from any service via REST API
-- Polls social platforms (YouTube, Reddit, Twitter, etc.) for metrics every 10 minutes
-- Detects anomalies and generates AI-powered suggestions
-- Returns analytics and insights via REST endpoints
-
-**No tight coupling:** Other services (Genesis, Forge, Orbit) call PULSE endpoints but don't need to run simultaneously.
-
-**Standalone Mode:** Set `ENABLE_EXTERNAL_SERVICES=false` in `.env` to run independently without calling other services.
+*Live metrics · Audience sentiment · AI-powered improvement suggestions*
 
 ---
 
-## 🚀 Quick Start
+![Python](https://img.shields.io/badge/Python-3.10-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat-square&logo=postgresql&logoColor=white)
+![NVIDIA](https://img.shields.io/badge/NVIDIA-Qwen_AI-76B900?style=flat-square&logo=nvidia&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Deployed](https://img.shields.io/badge/Deployed-Render-46E3B7?style=flat-square&logo=render&logoColor=white)
 
-### ⚡ Using Python Scripts (Easiest)
-```powershell
-# First time only
-python setup_pulse.py
+**🌐 Live:** https://pulse-api-l1xa.onrender.com
 
-# Daily startup
-python start_pulse.py
-```
-
-### 📋 Or Manual Commands
-```powershell
-# First time setup
-pip install -r requirements.txt
-docker-compose up -d
-alembic upgrade head
-python -c "import nltk; nltk.download('vader_lexicon')"
-
-# Daily startup (run these 2 commands)
-docker-compose up -d
-python main.py
-```
-
-**Service runs on:** http://localhost:8003  
-**API Docs:** http://localhost:8003/docs  
-**Quick Commands:** See [COMMANDS.txt](COMMANDS.txt)
+</div>
 
 ---
 
-## 🎯 What PULSE Does
+## What is PULSE?
 
-PULSE monitors content **after it has been posted** and provides:
+PULSE is a standalone intelligence microservice that monitors your content **after it goes live**. You give it a YouTube video or Reddit post URL — it gives you a complete performance picture: live metrics, audience sentiment, a performance verdict with a reason, and three tailored AI suggestions for what to do next.
 
-1. **Real-Time Analytics** — Views, engagement, sentiment across all platforms
-2. **Anomaly Detection** — Automatically flags underperforming or viral content
-3. **AI Mitigations** — Claude-powered suggestions for immediate action
-4. **Feedback Loop** — Sends performance learnings back to Genesis & Orbit
+No multi-step setup. No manual platform registration. One URL in, full intelligence out.
 
-**PULSE does NOT generate or transform content.** It only monitors, analyzes, and suggests.
+> PULSE **monitors and advises** — it does not generate or transform content.
 
 ---
 
-## 🏗️ Architecture
+## Core Features
+
+| Feature                         | Description                                                            |
+| ------------------------------- | ---------------------------------------------------------------------- |
+| 🔗**One-URL Input**       | Paste any YouTube or Reddit URL — PULSE handles everything else       |
+| 📊**Live Metrics**        | Fetches real-time views, likes, comments directly from platform APIs   |
+| 🧠**Sentiment Analysis**  | VADER scoring across top 20 comments — positive, neutral, or negative |
+| 🤖**AI Suggestions**      | NVIDIA Qwen generates 3 specific, actionable improvement tips          |
+| 📈**Growth Tracking**     | Every analysis is saved — call again to build a historical timeline   |
+| 🔄**Background Polling**  | Registered content is auto-refreshed every 10 minutes                  |
+| 🏆**Trending Discovery**  | Live competitive intelligence from YouTube & Reddit                    |
+| 📉**Dashboard Analytics** | KPI cards, timeseries, platform comparison — all queryable by period  |
+
+---
+
+## How It Works
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   PULSE Service                      │
-│                                                      │
-│  ┌──────────────┐      ┌─────────────────┐         │
-│  │  FastAPI     │◄────►│   PostgreSQL    │         │
-│  │  REST API    │      │   (3 tables)    │         │
-│  └──────┬───────┘      └─────────────────┘         │
-│         │                                            │
-│         │                                            │
-│  ┌──────▼───────────────────────────────┐           │
-│  │     APScheduler (10 min polling)      │           │
-│  │                                       │           │
-│  │  ┌─────────────┐  ┌──────────────┐  │           │
-│  │  │  YouTube    │  │   Reddit     │  │           │
-│  │  │  (Real API) │  │  (Real API)  │  │           │
-│  │  └─────────────┘  └──────────────┘  │           │
-│  │                                       │           │
-│  │  ┌─────────────────────────────────┐ │           │
-│  │  │ Mock Platforms (Twitter, IG,    │ │           │
-│  │  │ LinkedIn, TikTok)               │ │           │
-│  │  └─────────────────────────────────┘ │           │
-│  └───────────────────────────────────────┘           │
-│                                                      │
-│  ┌──────────────────────────────────────┐           │
-│  │   Anomaly Detection + Claude AI      │           │
-│  └──────────────────────────────────────┘           │
-└─────────────────────────────────────────────────────┘
+  You paste a URL
+       │
+       ▼
+  ┌─────────────────────────────────────────────┐
+  │              POST /analyze                  │
+  │                                             │
+  │  1. Detect platform from URL                │
+  │  2. Fetch live data from platform API       │
+  │  3. Run VADER sentiment on top comments     │
+  │  4. Auto-register content if first visit    │
+  │  5. Save metrics snapshot to DB             │
+  │  6. Compare engagement vs predicted         │
+  │  7. Return verdict + reason                 │
+  └─────────────────────────────────────────────┘
+       │
+       ▼
+  ┌─────────────────────────────────────────────┐
+  │             POST /suggestions               │
+  │                                             │
+  │  1. Look up latest metrics from DB          │
+  │  2. Build context: title, platform,         │
+  │     engagement, sentiment, status           │
+  │  3. Call NVIDIA Qwen (122B param model)     │
+  │  4. Return 3 tailored action items          │
+  └─────────────────────────────────────────────┘
+       │
+       ▼
+  GET /analyze/{id}/history  →  Full timeline of all snapshots
 ```
 
 ---
 
-## 📡 API Endpoints
+## Performance Verdicts
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| **Content** |
-| `POST` | `/content/register` | Register content for monitoring |
-| `GET` | `/content/list` | List all monitored content |
-| `POST` | `/content/dna-update` | Update DNA with learnings || **Ingestion** |
-| `POST` | `/ingestion/trigger` | Manually trigger platform polling |
-| `GET` | `/ingestion/status` | Get last ingestion timestamps || **Analytics** |
-| `GET` | `/analytics/summary` | KPI cards (views, engagement, etc.) |
-| `GET` | `/analytics/timeseries` | Daily performance data |
-| `GET` | `/analytics/by-platform` | Platform comparison |
-| `GET` | `/analytics/top-content` | Top performing content |
-| **Alerts** |
-| `GET` | `/alerts/` | Get active alerts |
-| `POST` | `/alerts/{id}/resolve` | Dismiss alert |
-| **Mitigations** |
-| `GET` | `/mitigations/{content_id}` | AI suggestions |
-| **Health** |
-| `GET` | `/health` | Service status |
+Every analysis returns one of four statuses — with a plain-English reason:
 
-📖 **Full API Docs:** http://localhost:8003/docs (after starting)
+| Status                   | Condition                        | Example Reason                                                 |
+| ------------------------ | -------------------------------- | -------------------------------------------------------------- |
+| ✅`on_track`           | Engagement within expected range | *"Content is performing within expected range"*              |
+| 🚀`viral_spike`        | Engagement >50% above predicted  | *"Engagement is 72% above expected — content is trending!"* |
+| ⚠️`underperforming`  | Engagement >30% below predicted  | *"Engagement is 41% below expected baseline of 5.0%"*        |
+| 🔴`negative_sentiment` | Sentiment score < -0.3           | *"Audience sentiment is negative (score: -0.42)"*            |
+
+> **Reddit note:** Engagement rates naturally run 1–3% vs YouTube's 5–8%, since Reddit view counts are estimated from upvotes. This is expected behaviour.
 
 ---
 
-## 🗄️ Database Schema
+## API Endpoints
 
-- **`content`** — Registered content items
-- **`metrics`** — Performance data (collected every 10 min)
-- **`alerts`** — Anomaly alerts with AI suggestions
+| Method   | Endpoint                          | What it does                                      |
+| -------- | --------------------------------- | ------------------------------------------------- |
+| `POST` | `/analyze`                      | Analyze a URL — live metrics, sentiment, verdict |
+| `POST` | `/suggestions`                  | Get 3 AI improvement suggestions for a URL        |
+| `GET`  | `/analyze/{content_id}/history` | All historical snapshots for a content item       |
+| `GET`  | `/analytics/summary`            | KPI totals + % change vs prior period             |
+| `GET`  | `/analytics/timeseries`         | Daily metrics for line/area charts                |
+| `GET`  | `/analytics/by-platform`        | Performance grouped by platform                   |
+| `GET`  | `/analytics/discover-trending`  | Live trending content from YouTube / Reddit       |
+| `GET`  | `/health`                       | Liveness check                                    |
 
----
-
-## 🔧 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | FastAPI (Python) |
-| Database | PostgreSQL |
-| ORM | SQLAlchemy + Alembic |
-| Scheduler | APScheduler |
-| Sentiment | VADER (NLTK) |
-| AI | Anthropic Claude API |
-| Real APIs | YouTube Data API v3, Reddit PRAW |
+📖 Full request/response details: [API_REFERENCE.md](API_REFERENCE.md)
 
 ---
 
-## 🐳 Docker vs Local PostgreSQL
+## Live Examples
 
-### ✅ **Recommended: Docker PostgreSQL**
-**Pros:**
-- Quick setup (one command: `docker-compose up -d`)
-- No system-wide install needed
-- Easy to reset/clean
-- Consistent across environments
-- Isolated from other projects
+### Analyze a YouTube Video
 
-**Cons:**
-- Requires Docker Desktop (~500MB download)
-
-### Local PostgreSQL
-**Pros:**
-- Full PostgreSQL features
-- Better for production-like testing
-
-**Cons:**
-- More complex installation
-- System-wide configuration
-- Potential port conflicts
-
-**Verdict:** Use Docker for development/hackathon. Switch to managed PostgreSQL (AWS RDS, Azure, etc.) for production.
-
----
-
-## 🧪 Testing
-
-### 1. Start the service
-```powershell
-python main.py
-```
-
-### 2. Health check
-```powershell
-curl http://localhost:8003/health
-```
-
-### 3. Register content
-```powershell
-curl -X POST http://localhost:8003/content/register \
+```bash
+curl -X POST http://localhost:8003/analyze \
   -H "Content-Type: application/json" \
-  -d '{
-    "title": "My Test Video",
-    "platform": "youtube",
-    "post_id": "dQw4w9WgXcQ",
-    "content_dna": {"tone": "educational"},
-    "predicted_engagement": 5.0,
-    "posted_at": "2026-03-01T10:00:00Z"
-  }'
+  -d '{"url": "https://www.youtube.com/watch?v=yqF5G57vf-E"}'
 ```
 
-### 4. Check analytics
-```powershell
-curl http://localhost:8003/analytics/summary?period=7d
+```json
+{
+  "content_id": "a1b2c3d4-...",
+  "platform": "youtube",
+  "title": "Video Title",
+  "channel": "Channel Name",
+  "metrics": {
+    "views": 123297,
+    "likes": 7200,
+    "comments": 1050,
+    "engagement_rate": 6.69,
+    "sentiment_score": 0.312,
+    "sentiment_label": "positive",
+    "recorded_at": "2026-03-08T10:00:00Z"
+  },
+  "status": "on_track",
+  "reason": "Content is performing within expected range"
+}
+```
+
+### Get AI Suggestions
+
+```bash
+curl -X POST http://localhost:8003/suggestions \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.youtube.com/watch?v=yqF5G57vf-E"}'
+```
+
+```json
+{
+  "status": "on_track",
+  "suggestions": [
+    "1. Add chapter timestamps to improve retention and boost search ranking...",
+    "2. Pin a strategic comment within the first hour to anchor the discussion...",
+    "3. Cross-post a short clip to relevant subreddits to capture new audiences..."
+  ]
+}
+```
+
+### Analyze a Reddit Post
+
+```bash
+curl -X POST http://localhost:8003/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.reddit.com/r/science/comments/abc123/post-title/"}'
+```
+
+```json
+{
+  "platform": "reddit",
+  "channel": "r/science",
+  "metrics": {
+    "views": 595200,
+    "likes": 5952,
+    "comments": 843,
+    "engagement_rate": 1.14,
+    "sentiment_score": -0.21,
+    "sentiment_label": "negative"
+  },
+  "status": "underperforming",
+  "reason": "Engagement is 77% below expected baseline of 5.0%"
+}
 ```
 
 ---
 
-## 🔗 Integration with Synapse Services
+## Architecture
 
-| Service | Port | Role |
-|---------|------|------|
-| **Genesis** | 8001 | Receives performance feedback |
-| **Forge** | 8002 | Sends registered content to PULSE |
-| **PULSE** | 8003 | This service |
-| **Orbit** | 8004 | Receives timing insights |
+```
+┌─────────────────────────────────────────────────────────┐
+│                      PULSE  :8003                        │
+│                                                         │
+│   ┌─────────────┐    ┌──────────────────────────────┐  │
+│   │  FastAPI    │    │         PostgreSQL            │  │
+│   │  REST API   │◄──►│  content  │  metrics         │  │
+│   └──────┬──────┘    └──────────────────────────────┘  │
+│          │                                              │
+│   ┌──────▼──────────────────────────────────┐          │
+│   │        APScheduler  (every 10 min)       │          │
+│   │   YouTube Data API v3  │  Reddit JSON    │          │
+│   └─────────────────────────────────────────┘          │
+│                                                         │
+│   ┌─────────────────────────────────────────┐          │
+│   │   NVIDIA Qwen  (qwen3.5-122b-a10b)      │          │
+│   │   AI suggestions — called on demand     │          │
+│   └─────────────────────────────────────────┘          │
+└─────────────────────────────────────────────────────────┘
+```
 
-Configure URLs in `.env`:
+---
+
+## Quick Start
+
+### 1. Clone & install
+
+```bash
+git clone <repo-url>
+cd PULSE
+pip install -r requirements.txt
+```
+
+### 2. Configure environment
+
+Copy `.env.example` → `.env` and fill in your keys:
+
 ```env
-GENESIS_SERVICE_URL=http://localhost:8001
-FORGE_SERVICE_URL=http://localhost:8002
-ORBIT_SERVICE_URL=http://localhost:8004
+DATABASE_URL=postgresql://user:password@host/pulse_db
+
+YOUTUBE_API_KEY=your_google_api_key
+NVIDIA_API_KEY=your_nvidia_api_key
+NVIDIA_API_URL=https://integrate.api.nvidia.com/v1/chat/completions
+NVIDIA_MODEL=qwen/qwen3.5-122b-a10b
 ```
+
+### 3. Run migrations
+
+```bash
+alembic upgrade head
+```
+
+### 4. Start the server
+
+```bash
+python main.py
+```
+
+|                      | Local                       | Production                                |
+| -------------------- | --------------------------- | ----------------------------------------- |
+| **Service**    | http://localhost:8003       | https://pulse-api-l1xa.onrender.com       |
+| **Swagger UI** | http://localhost:8003/docs  | https://pulse-api-l1xa.onrender.com/docs  |
+| **ReDoc**      | http://localhost:8003/redoc | https://pulse-api-l1xa.onrender.com/redoc |
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-pulse/
-├── main.py                 # FastAPI entry point
-├── database.py             # PostgreSQL connection
-├── models.py               # SQLAlchemy ORM models
-├── schemas.py              # Pydantic schemas
-├── scheduler.py            # APScheduler polling
+PULSE/
+├── main.py                       # FastAPI app, router registration, health check
+├── database.py                   # PostgreSQL connection & session factory
+├── models.py                     # SQLAlchemy models — Content, Metrics
+├── schemas.py                    # Pydantic response schemas
+├── scheduler.py                  # APScheduler — polls every 10 min
+├── Dockerfile                    # python:3.10-slim container
+├── requirements.txt
+├── .env.example
+│
 ├── routers/
-│   ├── content.py         # Content registration
-│   ├── analytics.py       # Performance analytics
-│   ├── alerts.py          # Alert management
-│   └── mitigations.py     # AI suggestions
+│   ├── analyze.py                # POST /analyze · GET /analyze/{id}/history
+│   ├── mitigations.py            # POST /suggestions
+│   └── analytics.py              # GET /analytics/*
+│
 ├── services/
-│   ├── anomaly.py         # Anomaly detection
-│   ├── mitigation.py      # Claude API
-│   ├── dna_updater.py     # Feedback to Genesis/Orbit
+│   ├── mitigation.py             # NVIDIA Qwen API integration
+│   ├── trending_discovery.py     # Live platform trending discovery
 │   └── ingestion/
-│       ├── youtube.py     # YouTube Data API
-│       ├── reddit.py      # Reddit PRAW
-│       └── mock_platforms.py  # Mock data
-└── alembic/               # Database migrations
+│       ├── youtube.py            # YouTube Data API v3 polling
+│       └── reddit.py             # Reddit public JSON API polling
+│
+└── alembic/                      # Database migrations
 ```
 
 ---
 
-## 🛠️ Troubleshooting
+## Tech Stack
 
-| Issue | Solution |
-|-------|----------|
-| Database connection error | Check `docker ps` or verify local PostgreSQL is running |
-| NLTK error | Run `python -c "import nltk; nltk.download('vader_lexicon')"` |
-| Port 8003 in use | Change port in `main.py` or kill existing process |
-| No metrics collecting | Verify `post_id` is correct (YouTube video ID, not URL) |
-| Claude API error | Check `ANTHROPIC_API_KEY` in `.env` |
-
-Full troubleshooting guide: [SETUP.md](SETUP.md#troubleshooting)
-
----
-
-## 📝 Environment Variables
-
-Required in `.env`:
-```env
-DATABASE_URL=postgresql://pulse_user:pulse_password@localhost:5432/pulse_db
-ANTHROPIC_API_KEY=your_key_here
-YOUTUBE_API_KEY=your_key_here
-REDDIT_CLIENT_ID=your_key_here
-REDDIT_CLIENT_SECRET=your_key_here
-REDDIT_USER_AGENT=pulse_monitor/1.0
-```
-
----
-
-## 📄 License
-
-MIT License — Synapse Hackathon 2026
-
----
-
-## 🚦 Status
-
-**Service Port:** `8003`  
-**Polling Interval:** Every 10 minutes  
-**Database:** PostgreSQL 15+  
-**Python:** 3.10+
-
----
-
-**Ready to start?** Run `.\setup.ps1` or see [SETUP.md](SETUP.md) for details.
+| Layer                        | Technology                             |
+| ---------------------------- | -------------------------------------- |
+| **Framework**          | FastAPI + Uvicorn                      |
+| **Language**           | Python 3.10                            |
+| **Database**           | PostgreSQL                             |
+| **ORM / Migrations**   | SQLAlchemy + Alembic                   |
+| **Background Jobs**    | APScheduler                            |
+| **Sentiment Analysis** | VADER (`vaderSentiment`)             |
+| **AI Suggestions**     | NVIDIA Qwen `qwen/qwen3.5-122b-a10b` |
+| **YouTube Data**       | Google API Python Client (Data API v3) |
+| **Reddit Data**        | Public JSON API — no auth required    |
+| **Container**          | Docker `python:3.10-slim`            |
